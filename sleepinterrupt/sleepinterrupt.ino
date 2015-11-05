@@ -55,9 +55,9 @@ int joystick[2];  // 2 element array holding Joystick readings
 void setup(void)
 {
     DDRD &= B00000011;       // set Arduino pins 2 to 7 as inputs, leaves 0 & 1 (RX & TX) as is
-    DDRB = B00000000;        // set pins 8 to 13 as inputs
+    //DDRB = B00000000;        // set pins 8 to 13 as inputs
     PORTD |= B11111100;      // enable pullups on pins 2 to 7
-    PORTB |= B11111111;      // enable pullups on pins 8 to 13
+    //PORTB |= B11111111;      // enable pullups on pins 8 to 13
     pinMode(13,OUTPUT);      // set pin 13 as an output so we can use LED to monitor
     digitalWrite(13,HIGH);   // turn pin 13 LED on
     Serial.begin(9600);
@@ -73,20 +73,23 @@ void loop(void)
     delay(1000);
     Serial.println(20);
     
-    sleepNow();
+    
     
     joystick[0] = analogRead(JOYSTICK_X);
     joystick[1] = analogRead(JOYSTICK_Y);
   
     radio.write( joystick, sizeof(joystick) );
-
+    Serial.println(21);
+    delay(1000);
+    
+    sleepNow();
 }//--(end main loop )---
                 //
 void sleepNow(void)
 {
   Serial.println(40);
     // Set pin 2 as interrupt and attach handler:
-    attachInterrupt(0, pinInterrupt, CHANGE);
+    attachInterrupt(0, pinInterrupt, LOW);
     delay(100);
     //
     // Choose our preferred sleep mode:
