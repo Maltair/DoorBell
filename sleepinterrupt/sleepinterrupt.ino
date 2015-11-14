@@ -30,7 +30,7 @@
 #include <avr/sleep.h>
 #include <avr/io.h>
 int pin = 2;
-//volatile int state = LOW; 
+volatile int state = LOW; 
 
 /*-----( Import needed libraries )-----*/
 #include <SPI.h>
@@ -58,9 +58,9 @@ void setup(void)
     //DDRB = B00000000;        // set pins 8 to 13 as inputs
     PORTD |= B11111100;      // enable pullups on pins 2 to 7
     //PORTB |= B11111111;      // enable pullups on pins 8 to 13
-    pinMode(13,OUTPUT);      // set pin 13 as an output so we can use LED to monitor
-    digitalWrite(13,HIGH);   // turn pin 13 LED on
-    Serial.begin(9600);
+    //pinMode(13,OUTPUT);      // set pin 13 as an output so we can use LED to monitor
+    //digitalWrite(13,HIGH);   // turn pin 13 LED on
+    //Serial.begin(9600);
     radio.begin();
     radio.openWritingPipe(pipe);
 }//--(end setup )---
@@ -71,25 +71,28 @@ void loop(void)
     // Stay awake for 1 second, then sleep.
     // LED turns off when sleeping, then back on upon wake.
     delay(1000);
-    Serial.println(20);
+    //Serial.println(20);
     
-    
-    
-    joystick[0] = analogRead(JOYSTICK_X);
-    joystick[1] = analogRead(JOYSTICK_Y);
+    for (int i=0; i <= 25; i++){
+      delay(100);
+      joystick[0] = analogRead(JOYSTICK_X);
+      joystick[1] = analogRead(JOYSTICK_Y);
   
-    radio.write( joystick, sizeof(joystick) );
-    Serial.println(21);
-    delay(1000);
+      radio.write( joystick, sizeof(joystick) );
+      //Serial.println(21);
+    }
+      
+      delay(100);
+    
     
     sleepNow();
 }//--(end main loop )---
                 //
 void sleepNow(void)
 {
-  Serial.println(40);
+  //Serial.println(40);
     // Set pin 2 as interrupt and attach handler:
-    attachInterrupt(0, pinInterrupt, LOW);
+    attachInterrupt(0, pinInterrupt, CHANGE);
     delay(100);
     //
     // Choose our preferred sleep mode:
@@ -99,19 +102,20 @@ void sleepNow(void)
     sleep_enable();
     //
     // Put the device to sleep:
-    digitalWrite(13,LOW);   // turn LED off to indicate sleep
-    Serial.println(41);
+    
+    //Serial.println(41);
     delay(100);
     sleep_mode();
     //
     // Upon waking up, sketch continues from this point.
-    Serial.println(42);
+    delay(100);
+    //Serial.println(42);
     sleep_disable();
-    digitalWrite(13,HIGH);   // turn LED on to indicate awake
+    //digitalWrite(13,HIGH);   // turn LED on to indicate awake
 }
                 //
 void pinInterrupt(void)
 {
     detachInterrupt(0);
-  Serial.println(60);
+  //Serial.println(60);
 }
