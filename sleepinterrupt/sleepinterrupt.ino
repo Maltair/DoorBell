@@ -29,7 +29,6 @@
 #include <avr/power.h>
 #include <avr/sleep.h>
 #include <avr/io.h>
-int pin = 2;
 volatile int state = LOW; 
 
 /*-----( Import needed libraries )-----*/
@@ -38,69 +37,52 @@ volatile int state = LOW;
 //#include <RF24.h>
 #include "RF24.h"
 /*-----( Declare Constants and Pin Numbers )-----*/
+#define INT_PIN 2
+#define RADIO_POWER_PIN 3
 #define CE_PIN   9
 #define CSN_PIN 10
-//#define JOYSTICK_X A0
-//#define JOYSTICK_Y A1
+
+#define messageRepeat 3
 
 // NOTE: the "LL" at the end of the constant is "LongLong" type
 const uint64_t pipe[2] =  {0xa5a5a5a5a1LL, 0xa5a5a5a5b1LL};//0xE8E8F0F0E1LL; // Define the transmit pipe
 
-
 /*-----( Declare objects )-----*/
 RF24 radio(CE_PIN, CSN_PIN); // Create a Radio
+
 /*-----( Declare Variables )-----*/
-//int joystick[2];  // 2 element array holding Joystick readings
 String message[] = "dingdong";
 int sizeOfMessage;
-int messageRepeat = 1;
-bool txResult[3];
+int count;
 
 void setup(void)
 {
-    DDRD &= B00000011;       // set Arduino pins 2 to 7 as inputs, leaves 0 & 1 (RX & TX) as is
-    //DDRB = B00000000;        // set pins 8 to 13 as inputs
-    PORTD |= B11111000;      // enable pullups on pins 3 to 7
-    //PORTB |= B11111111;      // enable pullups on pins 8 to 13
-    //pinMode(13,OUTPUT);      // set pin 13 as an output so we can use LED to monitor
-    //digitalWrite(13,HIGH);   // turn pin 13 LED on
+    pinMode(CE_PIN, OUTPUT);
+    pinMode(CSN_PIN, OUTPUT);
+    pinMode(INT_PIN, INPUT_PULLUP);
+    pinMode(RADIO_POWER_PIN, INPUT);
     Serial.begin(9600);
-    radio.begin();
-    radio.setPALevel(RF24_PA_LOW);
-    radio.setDataRate(RF24_2MBPS);
-    radio.setAutoAck(1);                     // Ensure autoACK is enabled
-    radio.setPayloadSize(32);
-    radio.enableDynamicPayloads();
-    radio.setChannel(0x60);
-    radio.setRetries(15,15);                  // Optionally, increase the delay between retries & # of retries
-    radio.setCRCLength(RF24_CRC_16);          // Use 8-bit CRC for performance
-    Serial.println("running");
-    
-    radio.openWritingPipe(pipe[0]);
-    radio.openReadingPipe(1, pipe[1]);
-    sizeOfMessage = sizeof(message);
-    
+    sizeOfMessage = sizeof(message); 
  }//--(end setup )---
 
-                //
 void loop(void)
 {
-    //delay(100);
     Serial.println("Sleeping");
-    delay(300);
+    delay(100);    //wait for serial to send
     sleepNow();
-    Serial.println("Detection");
-    //delay(1000);
-    //exit from sleep means interrupt has occurred
-    //send the message x number of times
+    Serial.println("Detection"); //sleep was exited by an interupt
+    startRadio();
     for (int i=0; i < messageRepeat; i++){
-      delay(100);
-      //Serial.println("Sending/n");
-      //radio.write(message, sizeOfMessage );
-      //if (!radio.write(&message, sizeOfMessage )){Serial.println("tx failed/n");}
-      radio.write(&message, sizeOfMessage);
-    }   
-      delay(1);    
+      while (!radio.write(message, sizeOfMessage) && count < messageRepeat)
+      {  
+        delay(15);
+        Serial.print(count%10);
+        count++;
+      } 
+      count = 0;
+    }  
+    stopRadio();
+    Serial.println("done");
 }//--(end main loop )---
                 //
 void sleepNow(void)
@@ -112,10 +94,33 @@ void sleepNow(void)
     sleep_enable();    // Set sleep enable (SE) bit:
     sleep_mode();  // Put the device to sleep:
     sleep_disable(); // clear sleep enable (SE) bit
-    //digitalWrite(13,HIGH);   // turn LED on to indicate awake
 }
-                //
+
 void pinInterrupt(void)
 {
     detachInterrupt(0);
 }
+
+void startRadio(void)
+{
+    pinMode(RADIO_POWER_PIN, OUTPUT);
+    digitalWrite(RADIO_POWER_PIN, HIGH); //Send power to the radio
+    delay(200);    //allow time to wake ] up
+    radio.begin(); 
+    radio.setPALevel(RF24_PA_LOW);
+    radio.setDataRate(RF24_2MBPS);
+    radio.setAutoAck(1);                     
+    radio.setPayloadSize(32);
+    radio.enableDynamicPayloads();
+    radio.setChannel(0x60);
+    radio.setRetries(15,15);                  
+    radio.setCRCLength(RF24_CRC_16);          
+    radio.openWritingPipe(pipe[0]);
+    radio.openReadingPipe(1, pipe[1]);
+}
+
+void stopRadio()
+{
+    pinMode(RADIO_POWER_PIN, INPUT);  //let radio power bleed out, dont pull low and short out. no need
+}
+
