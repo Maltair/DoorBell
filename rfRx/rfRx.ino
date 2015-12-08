@@ -28,8 +28,8 @@
 #define CSN_PIN 10
 
 // NOTE: the "LL" at the end of the constant is "LongLong" type
-const uint64_t pipe = 0xE8E8F0F0E1LL; // Define the transmit pipe
-
+//const uint64_t pipe = 0xE8E8F0F0E1LL; // Define the transmit pipe
+const uint64_t pipe = 0xa5a5a5a5a1LL; // Define the transmit pipe
 
 /*-----( Declare objects )-----*/
 RF24 radio(CE_PIN, CSN_PIN); // Create a Radio
@@ -43,7 +43,7 @@ void setup()   /****** SETUP: RUNS ONCE ******/
   Serial.println("Nrf24L01 Receiver Starting");
   radio.begin();
   radio.openReadingPipe(1,pipe);
-  radio.startListening();;
+  radio.startListening();
 }//--(end setup )---
 
 
@@ -56,7 +56,8 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
     while (!done)
     {
       // Fetch the data payload
-      done = radio.read( joystick, sizeof(joystick) );
+//      done = radio.read( joystick, sizeof(joystick) );
+      radio.read( joystick, sizeof(joystick) );
       Serial.print("X = ");
       Serial.print(joystick[0]);
       Serial.print(" Y = ");      
