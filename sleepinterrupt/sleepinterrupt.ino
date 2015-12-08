@@ -13,17 +13,9 @@
    7 - MISO to Arduino pin 12
    8 - UNUSED
    - 
-   Analog Joystick or two 10K potentiometers:
-   GND to Arduino GND
-   VCC to Arduino +5V
-   X Pot to Arduino A0
-   Y Pot to Arduino A1
-   
- - V1.00 11/26/13
-   Based on examples at http://www.bajdi.com/
-   Questions: terry@yourduino.com */
-
-
+   Arduino pin 2 for wake interupt
+   Arduino pin 3 for rf module power supply
+*/
 
 #include <avr/interrupt.h>
 #include <avr/power.h>
@@ -33,16 +25,15 @@ volatile int state = LOW;
 
 /*-----( Import needed libraries )-----*/
 #include <SPI.h>
-//#include <nRF24L01.h>
-//#include <RF24.h>
 #include "RF24.h"
+
 /*-----( Declare Constants and Pin Numbers )-----*/
 #define INT_PIN 2
 #define RADIO_POWER_PIN 3
 #define CE_PIN   9
 #define CSN_PIN 10
 
-#define messageRepeat 3
+#define messageRepeat 7
 
 // NOTE: the "LL" at the end of the constant is "LongLong" type
 const uint64_t pipe[2] =  {0xa5a5a5a5a1LL, 0xa5a5a5a5b1LL};//0xE8E8F0F0E1LL; // Define the transmit pipe
